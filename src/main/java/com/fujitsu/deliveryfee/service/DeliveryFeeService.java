@@ -6,6 +6,8 @@ import com.fujitsu.deliveryfee.exception.VehicleUseForbiddenException;
 import com.fujitsu.deliveryfee.exception.WeatherDataUnavailableException;
 import com.fujitsu.deliveryfee.model.WeatherData;
 import com.fujitsu.deliveryfee.repository.WeatherDataRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class DeliveryFeeService {
 
     private final WeatherDataRepository weatherDataRepository;
+    private static final Logger log = LoggerFactory.getLogger(DeliveryFeeService.class);
 
     @Autowired
     public DeliveryFeeService(WeatherDataRepository weatherDataRepository) {
@@ -20,13 +23,17 @@ public class DeliveryFeeService {
     }
 
     public double calculateDeliveryFee(String city, String vehicleType) {
+        log.info("Calculating delivery fee for city: {}, vehicle type: {}", city, vehicleType);
         city = city.toLowerCase();
         vehicleType = vehicleType.toLowerCase();
 
         String stationName = mapCityToStationName(city);
         double baseFee = calculateBaseFee(city, vehicleType);
         double weatherFees = calculateWeatherFees(stationName, vehicleType);
-        return baseFee + weatherFees;
+        double totalFee = baseFee + weatherFees;
+        log.info("Total delivery fee calculated: {} for city: {}, vehicle type: {}", totalFee, city, vehicleType);
+
+        return totalFee;
     }
 
     private double calculateBaseFee(String city, String vehicleType) {

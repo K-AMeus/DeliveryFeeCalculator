@@ -1,5 +1,7 @@
 package com.fujitsu.deliveryfee.service;
 
+import com.fujitsu.deliveryfee.config.WeatherProperties;
+import com.fujitsu.deliveryfee.exception.WeatherDataProcessingException;
 import com.fujitsu.deliveryfee.integration.Observations;
 import com.fujitsu.deliveryfee.integration.StationData;
 import com.fujitsu.deliveryfee.model.WeatherData;
@@ -15,21 +17,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.io.StringReader;
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 
 @Service
 public class WeatherDataImportService {
 
     private static final Logger logger = LoggerFactory.getLogger(WeatherDataImportService.class);
-
     private final RestTemplate restTemplate;
     private final WeatherDataRepository weatherDataRepository;
+    private final WeatherProperties weatherProperties;
 
     @Autowired
-    public WeatherDataImportService(RestTemplate restTemplate, WeatherDataRepository weatherDataRepository) {
+    public WeatherDataImportService(RestTemplate restTemplate, WeatherDataRepository weatherDataRepository, WeatherProperties weatherProperties) {
         this.restTemplate = restTemplate;
         this.weatherDataRepository = weatherDataRepository;
+        this.weatherProperties = weatherProperties;
     }
 
     @Scheduled(cron = "0 * * * * *") // This runs at 15 minutes past every hour CHANGE BACK TO @Scheduled(cron = "0 15 * * * *") WHEN FINISHED TESTING
@@ -41,15 +44,17 @@ public class WeatherDataImportService {
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             Observations observations = (Observations) unmarshaller.unmarshal(new StringReader(xmlData));
 
+            List<String> stations = weatherProperties.getStations();
+
             observations.getStations().stream()
-                    .filter(station -> "Tallinn-Harku".equals(station.getName()) || "Tartu-Tõravere".equals(station.getName()) || "Pärnu".equals(station.getName()))
+                    .filter(station -> stations.contains(station.getName()))
                     .forEach(this::processAndSaveStationData);
 
+            logger.info("Weather data fetched and saved successfully.");
         } catch (JAXBException e) {
-            e.printStackTrace();
+            logger.error("Failed to process weather data XML", e);
+            throw new WeatherDataProcessingException("Failed to process weather data XML", e);
         }
-
-        logger.info("Weather data fetched and saved successfully.");
     }
 
     private String fetchWeatherDataXml() {
@@ -62,24 +67,10 @@ public class WeatherDataImportService {
         weatherData.setStationName(stationData.getName());
         weatherData.setWmoCode(stationData.getWmoCode());
         weatherData.setAirTemperature(stationData.getAirTemperature());
-
-        // Check for null before setting the wind speed
-        if (stationData.getWindSpeed() != null) {
-            weatherData.setWindSpeed(stationData.getWindSpeed());
-        } else {
-            weatherData.setWindSpeed(null);
-        }
-
-        // Check for null before setting the weather phenomenon
-        if (stationData.getWeatherPhenomenon() != null) {
-            weatherData.setWeatherPhenomenon(stationData.getWeatherPhenomenon());
-        } else {
-            weatherData.setWeatherPhenomenon(null);
-        }
-
+        weatherData.setWindSpeed(stationData.getWindSpeed());
+        weatherData.setWeatherPhenomenon(stationData.getWeatherPhenomenon());
         weatherData.setTimestamp(LocalDateTime.now());
 
-        // Save to database
         weatherDataRepository.save(weatherData);
     }
 
