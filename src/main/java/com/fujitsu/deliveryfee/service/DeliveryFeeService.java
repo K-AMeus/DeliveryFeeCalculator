@@ -1,5 +1,9 @@
 package com.fujitsu.deliveryfee.service;
 
+import com.fujitsu.deliveryfee.exception.UnsupportedCityException;
+import com.fujitsu.deliveryfee.exception.UnsupportedVehicleTypeException;
+import com.fujitsu.deliveryfee.exception.VehicleUseForbiddenException;
+import com.fujitsu.deliveryfee.exception.WeatherDataUnavailableException;
 import com.fujitsu.deliveryfee.model.WeatherData;
 import com.fujitsu.deliveryfee.repository.WeatherDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,9 @@ public class DeliveryFeeService {
     }
 
     public double calculateDeliveryFee(String city, String vehicleType) {
+        city = city.toLowerCase();
+        vehicleType = vehicleType.toLowerCase();
+
         String stationName = mapCityToStationName(city);
         double baseFee = calculateBaseFee(city, vehicleType);
         double weatherFees = calculateWeatherFees(stationName, vehicleType);
@@ -29,30 +36,30 @@ public class DeliveryFeeService {
                     case "car": return 4.0;
                     case "scooter": return 3.5;
                     case "bike": return 3.0;
-                    default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
+                    default: throw new UnsupportedVehicleTypeException(vehicleType);
                 }
             case "tartu":
                 switch (vehicleType) {
                     case "car": return 3.5;
                     case "scooter": return 3.0;
                     case "bike": return 2.5;
-                    default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
+                    default: throw new UnsupportedVehicleTypeException(vehicleType);
                 }
             case "pärnu":
                 switch (vehicleType) {
                     case "car": return 3.0;
                     case "scooter": return 2.5;
                     case "bike": return 2.0;
-                    default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
+                    default: throw new UnsupportedVehicleTypeException(vehicleType);
                 }
-            default: throw new IllegalArgumentException("Unsupported city: " + city);
+            default: throw new UnsupportedCityException(city);
         }
     }
 
     private double calculateWeatherFees(String stationName, String vehicleType) {
         WeatherData latestWeather = weatherDataRepository.findLatestByCity(stationName);
         if (latestWeather == null) {
-            throw new IllegalStateException("No weather data available for station: " + stationName);
+            throw new WeatherDataUnavailableException(stationName);
         }
         double fee = 0.0;
 
@@ -75,7 +82,7 @@ public class DeliveryFeeService {
                 } else if (phenomenon.toLowerCase().contains("rain")) {
                     fee += 0.5;
                 } else if (phenomenon.toLowerCase().contains("glaze") || phenomenon.toLowerCase().contains("hail") || phenomenon.toLowerCase().contains("thunder")) {
-                    throw new IllegalStateException("Usage of selected vehicle type is forbidden");
+                    throw new VehicleUseForbiddenException();
                 }
             }
 
@@ -85,7 +92,7 @@ public class DeliveryFeeService {
             if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() >= 10 && latestWeather.getWindSpeed() <= 20) {
                 fee += 0.5;
             } else if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() > 20) {
-                throw new IllegalStateException("Usage of selected vehicle type is forbidden");
+                throw new VehicleUseForbiddenException();
             }
         }
 
@@ -101,7 +108,7 @@ public class DeliveryFeeService {
             case "pärnu":
                 return "Pärnu";
             default:
-                throw new IllegalArgumentException("Unsupported city: " + city);
+                throw new UnsupportedCityException(city);
         }
     }
 }
