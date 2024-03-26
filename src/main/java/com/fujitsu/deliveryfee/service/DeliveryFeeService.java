@@ -24,25 +24,25 @@ public class DeliveryFeeService {
 
     private double calculateBaseFee(String city, String vehicleType) {
         switch (city) {
-            case "Tallinn":
+            case "tallinn":
                 switch (vehicleType) {
-                    case "Car": return 4.0;
-                    case "Scooter": return 3.5;
-                    case "Bike": return 3.0;
+                    case "car": return 4.0;
+                    case "scooter": return 3.5;
+                    case "bike": return 3.0;
                     default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
                 }
-            case "Tartu":
+            case "tartu":
                 switch (vehicleType) {
-                    case "Car": return 3.5;
-                    case "Scooter": return 3.0;
-                    case "Bike": return 2.5;
+                    case "car": return 3.5;
+                    case "scooter": return 3.0;
+                    case "bike": return 2.5;
                     default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
                 }
-            case "Pärnu":
+            case "pärnu":
                 switch (vehicleType) {
-                    case "Car": return 3.0;
-                    case "Scooter": return 2.5;
-                    case "Bike": return 2.0;
+                    case "car": return 3.0;
+                    case "scooter": return 2.5;
+                    case "bike": return 2.0;
                     default: throw new IllegalArgumentException("Unsupported vehicle type: " + vehicleType);
                 }
             default: throw new IllegalArgumentException("Unsupported city: " + city);
@@ -56,25 +56,36 @@ public class DeliveryFeeService {
         }
         double fee = 0.0;
 
-        if ("Scooter".equals(vehicleType) || "Bike".equals(vehicleType)) {
+
+
+        // Check weather conditions that affect both scooters and bikes
+        if ("scooter".equals(vehicleType) || "bike".equals(vehicleType)) {
             if (latestWeather.getAirTemperature() < -10) {
                 fee += 1.0;
             } else if (latestWeather.getAirTemperature() >= -10 && latestWeather.getAirTemperature() <= 0) {
                 fee += 0.5;
             }
-
-            if ("Snow".equals(latestWeather.getWeatherPhenomenon()) || "Sleet".equals(latestWeather.getWeatherPhenomenon())) {
-                fee += 1.0;
-            } else if ("Rain".equals(latestWeather.getWeatherPhenomenon())) {
-                fee += 0.5;
-            }
         }
 
-        if ("Bike".equals(vehicleType)) {
-            if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() >= 10 && latestWeather.getWindSpeed() < 20) {
+
+            String phenomenon = latestWeather.getWeatherPhenomenon();
+            if (phenomenon != null) {
+                if (phenomenon.toLowerCase().contains("snow") || phenomenon.toLowerCase().contains("sleet")) {
+                    fee += 1.0;
+                } else if (phenomenon.toLowerCase().contains("rain")) {
+                    fee += 0.5;
+                } else if (phenomenon.toLowerCase().contains("glaze") || phenomenon.toLowerCase().contains("hail") || phenomenon.toLowerCase().contains("thunder")) {
+                    throw new IllegalStateException("Usage of selected vehicle type is forbidden");
+                }
+            }
+
+
+        // Additional weather conditions specific to bikes
+        if ("bike".equals(vehicleType)) {
+            if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() >= 10 && latestWeather.getWindSpeed() <= 20) {
                 fee += 0.5;
-            } else if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() >= 20) {
-                throw new IllegalStateException("Usage of selected vehicle type is forbidden due to high wind speed");
+            } else if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() > 20) {
+                throw new IllegalStateException("Usage of selected vehicle type is forbidden");
             }
         }
 
@@ -83,11 +94,11 @@ public class DeliveryFeeService {
 
     private String mapCityToStationName(String city) {
         switch (city) {
-            case "Tallinn":
+            case "tallinn":
                 return "Tallinn-Harku";
-            case "Tartu":
+            case "tartu":
                 return "Tartu-Tõravere";
-            case "Pärnu":
+            case "pärnu":
                 return "Pärnu";
             default:
                 throw new IllegalArgumentException("Unsupported city: " + city);
