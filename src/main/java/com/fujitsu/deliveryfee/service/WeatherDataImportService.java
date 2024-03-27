@@ -23,7 +23,7 @@ import java.util.List;
 @Service
 public class WeatherDataImportService {
 
-    private static final Logger logger = LoggerFactory.getLogger(WeatherDataImportService.class);
+    private static final Logger log = LoggerFactory.getLogger(WeatherDataImportService.class);
     private final RestTemplate restTemplate;
     private final WeatherDataRepository weatherDataRepository;
     private final WeatherProperties weatherProperties;
@@ -37,7 +37,7 @@ public class WeatherDataImportService {
 
     @Scheduled(cron = "0 * * * * *") // This runs at 15 minutes past every hour CHANGE BACK TO @Scheduled(cron = "0 15 * * * *") WHEN FINISHED TESTING
     public void fetchAndSaveWeatherData() {
-        logger.info("Starting to fetch weather data...");
+        log.info("Starting to fetch weather data...");
         String xmlData = fetchWeatherDataXml();
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(Observations.class);
@@ -50,9 +50,9 @@ public class WeatherDataImportService {
                     .filter(station -> stations.contains(station.getName()))
                     .forEach(this::processAndSaveStationData);
 
-            logger.info("Weather data fetched and saved successfully.");
+            log.info("Weather data fetched and saved successfully.");
         } catch (JAXBException e) {
-            logger.error("Failed to process weather data XML", e);
+            log.error("Failed to process weather data XML", e);
             throw new WeatherDataProcessingException("Failed to process weather data XML", e);
         }
     }

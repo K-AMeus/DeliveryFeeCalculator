@@ -74,32 +74,49 @@ public class DeliveryFeeService {
 
         // Check weather conditions that affect both scooters and bikes
         if ("scooter".equals(vehicleType) || "bike".equals(vehicleType)) {
-            if (latestWeather.getAirTemperature() < -10) {
-                fee += 1.0;
-            } else if (latestWeather.getAirTemperature() >= -10 && latestWeather.getAirTemperature() <= 0) {
-                fee += 0.5;
+            if (latestWeather.getAirTemperature() != null) {
+                if (latestWeather.getAirTemperature() < -10) {
+                    fee += 1.0;
+                } else if (latestWeather.getAirTemperature() >= -10 && latestWeather.getAirTemperature() <= 0) {
+                    fee += 0.5;
+                }
+            } else {
+                log.warn("Station {} has not reported air temperature, calculated fee may not accurately reflect weather conditions.", stationName);
             }
         }
 
 
-            String phenomenon = latestWeather.getWeatherPhenomenon();
-            if (phenomenon != null) {
-                if (phenomenon.toLowerCase().contains("snow") || phenomenon.toLowerCase().contains("sleet")) {
+        if (latestWeather.getWeatherPhenomenon() != null) {
+            String phenomenon = latestWeather.getWeatherPhenomenon().toLowerCase();
+            if (phenomenon.contains("snow") || phenomenon.contains("sleet")) {
+                fee += 1.0;
+            } else if (phenomenon.contains("shower")) {
+                if (phenomenon.contains("snow shower")) {
                     fee += 1.0;
-                } else if (phenomenon.toLowerCase().contains("rain")) {
+                } else {
                     fee += 0.5;
-                } else if (phenomenon.toLowerCase().contains("glaze") || phenomenon.toLowerCase().contains("hail") || phenomenon.toLowerCase().contains("thunder")) {
-                    throw new VehicleUseForbiddenException();
                 }
+            } else if (phenomenon.contains("rain")) {
+                fee += 0.5;
+            } else if (phenomenon.contains("glaze") || phenomenon.contains("hail") || phenomenon.contains("thunder")) {
+                throw new VehicleUseForbiddenException();
             }
+        } else {
+            log.warn("Station {} has not reported weather phenomenon, calculated fee may not accurately reflect weather conditions.", stationName);
+
+        }
 
 
         // Additional weather conditions specific to bikes
         if ("bike".equals(vehicleType)) {
-            if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() >= 10 && latestWeather.getWindSpeed() <= 20) {
-                fee += 0.5;
-            } else if (latestWeather.getWindSpeed() != null && latestWeather.getWindSpeed() > 20) {
-                throw new VehicleUseForbiddenException();
+            if (latestWeather.getWindSpeed() != null) {
+                if (latestWeather.getWindSpeed() >= 10 && latestWeather.getWindSpeed() <= 20) {
+                    fee += 0.5;
+                } else if (latestWeather.getWindSpeed() > 20) {
+                    throw new VehicleUseForbiddenException();
+                }
+            } else {
+                log.warn("Station {} has not reported wind speed, calculated fee may not accurately reflect weather conditions.", stationName);
             }
         }
 

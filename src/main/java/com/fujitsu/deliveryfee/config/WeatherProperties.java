@@ -11,7 +11,6 @@ public class WeatherProperties {
 
     private List<String> stations;
 
-    // Getters and Setters
     public List<String> getStations() {
         return stations;
     }

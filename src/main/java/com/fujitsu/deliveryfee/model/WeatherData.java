@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -15,11 +17,15 @@ public class WeatherData {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotNull
     private String stationName;
+
+    // Nullable - some stations don't report these
     private String wmoCode;
     private Double airTemperature;
     private Double windSpeed;
     private String weatherPhenomenon;
+    @NotNull
     private LocalDateTime timestamp;
 
     public WeatherData() {
@@ -29,6 +35,21 @@ public class WeatherData {
         this.id = id;
         this.stationName = stationName;
         this.wmoCode = wmoCode;
+        this.airTemperature = airTemperature;
+        this.windSpeed = windSpeed;
+        this.weatherPhenomenon = weatherPhenomenon;
+        this.timestamp = timestamp;
+    }
+
+    public WeatherData(String stationName, Double airTemperature, Double windSpeed, String weatherPhenomenon, LocalDateTime timestamp) {
+        this.stationName = stationName;
+        this.airTemperature = airTemperature;
+        this.windSpeed = windSpeed;
+        this.weatherPhenomenon = weatherPhenomenon;
+        this.timestamp = timestamp;
+    }
+
+    public WeatherData(Double airTemperature, Double windSpeed, String weatherPhenomenon, LocalDateTime timestamp) {
         this.airTemperature = airTemperature;
         this.windSpeed = windSpeed;
         this.weatherPhenomenon = weatherPhenomenon;
