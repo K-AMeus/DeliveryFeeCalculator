@@ -21,17 +21,17 @@ This project is a Java-based application designed for the Fujitsu Java Programmi
 - Gradle
 
 ### Running the Application
-1. **Clone the Project Repository**:
+1. **Clone the Project Repository**: git clone YOUR_REPOSITORY_URL
+   
    Replace `YOUR_REPOSITORY_URL` with the actual URL of the project's Git repository.
-   git clone YOUR_REPOSITORY_URL
 
-2. **Navigate to the Project Directory**:
+3. **Navigate to the Project Directory**:
    cd delivery-fee-calculator
 
-3. **Build the Project**:
+4. **Build the Project**:
    ./gradlew build
 
-4. **Run the Application**:
+5. **Run the Application**:
    ./gradlew bootRun
 
 ## REST API Documentation
