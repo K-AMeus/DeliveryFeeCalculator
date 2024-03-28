@@ -26,7 +26,7 @@ This project is a Java-based application designed for the Fujitsu Java Programmi
    Replace `YOUR_REPOSITORY_URL` with the actual URL of the project's Git repository.
 
 3. **Navigate to the Project Directory**:
-   cd deliveryFeeCalculator
+   cd DeliveryFeeCalculator
 
 4. **Build the Project**:
    ./gradlew build
