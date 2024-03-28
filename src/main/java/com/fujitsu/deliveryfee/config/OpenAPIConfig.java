@@ -4,6 +4,11 @@ import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
+
+/**
+ * Configuration class for setting up OpenAPI documentation for the Delivery Fee Calculator API.
+ * This class utilizes SpringDoc's OpenAPI 3 annotations to define global API information and server details.
+ */
 @Configuration
 @OpenAPIDefinition(
         info = @io.swagger.v3.oas.annotations.info.Info(

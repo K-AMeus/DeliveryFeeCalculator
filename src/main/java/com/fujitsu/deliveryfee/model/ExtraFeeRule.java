@@ -5,14 +5,20 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+
+/**
+ * Represents extra fee rules that adjust the delivery fee based on specific conditions.
+ * These conditions can include temperature, wind speed and weather phenomenon.
+ * This entity allows for dynamic fee adjustments to account for various external factors.
+ */
 @Entity
 public class ExtraFeeRule {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String conditionType; // e.g., "Temperature", "WindSpeed"
-    private String conditionValue; // e.g., "<-10", "10-20"
+    private String conditionType; // The type of condition (e.g., temperature, windSpeed, phenomenon)
+    private String conditionValue; // // The value or range that triggers the fee adjustment (e.g., "<-10", "10-20", "thunder")
     private Double fee;
 
     public ExtraFeeRule() {

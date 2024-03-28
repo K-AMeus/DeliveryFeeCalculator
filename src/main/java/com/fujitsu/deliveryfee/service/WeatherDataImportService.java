@@ -20,6 +20,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
+
+/**
+ * Service class for importing weather data from an external source.
+ * Periodically fetches weather data XML and saves it to the database.
+ */
 @Service
 public class WeatherDataImportService {
 
@@ -35,6 +40,12 @@ public class WeatherDataImportService {
         this.weatherProperties = weatherProperties;
     }
 
+
+    /**
+     * Scheduled task to fetch and save weather data.
+     * Fetches weather data XML from an external API, processes it, and saves it to the database.
+     * Runs every hour at 15 minutes past the hour.
+     */
     @Scheduled(cron = "0 * * * * *") // This runs at 15 minutes past every hour CHANGE BACK TO @Scheduled(cron = "0 15 * * * *") WHEN FINISHED TESTING
     public void fetchAndSaveWeatherData() {
         log.info("Starting to fetch weather data...");
@@ -57,11 +68,13 @@ public class WeatherDataImportService {
         }
     }
 
+    // Helper method to fetch weather data XML from external API
     private String fetchWeatherDataXml() {
         String url = "https://ilmateenistus.ee/ilma_andmed/xml/observations.php";
         return restTemplate.getForObject(url, String.class);
     }
 
+    // Helper method to process and save station data to the database
     private void processAndSaveStationData(StationData stationData) {
         WeatherData weatherData = new WeatherData();
         weatherData.setStationName(stationData.getName());

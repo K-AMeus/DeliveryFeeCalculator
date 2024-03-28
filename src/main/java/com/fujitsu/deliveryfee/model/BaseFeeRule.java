@@ -5,6 +5,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+
+/**
+ * Represents the base fee rules for calculating delivery fees.
+ * This entity holds the information necessary to determine the foundational
+ * delivery fee based on the city and the type of vehicle used for delivery.
+ */
 @Entity
 public class BaseFeeRule {
     @Id

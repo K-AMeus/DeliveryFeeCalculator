@@ -9,6 +9,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
+
+/**
+ * Represents weather data for a specific station at a specific point in time.
+ * This entity stores temperature, wind speed, and weather phenomena observed,
+ * which are crucial in calculating delivery fees under various conditions.
+ */
 @Entity
 public class WeatherData {
 
@@ -19,13 +25,13 @@ public class WeatherData {
     @NotNull
     private String stationName;
 
-    // Nullable - some stations don't report these
-    private String wmoCode;
-    private Double airTemperature;
-    private Double windSpeed;
-    private String weatherPhenomenon;
+    // Nullable - some stations don't report wmoCode, airTemperature, windSpeed and weatherPhenomenon
+    private String wmoCode; // World Meteorological Organization code for the station
+    private Double airTemperature; // Air temperature in degrees Celsius
+    private Double windSpeed; // Wind speed in meters per second
+    private String weatherPhenomenon; // Descriptive weather condition (e.g., clear, rain, snow)
     @NotNull
-    private LocalDateTime timestamp;
+    private LocalDateTime timestamp; // The timestamp of the weather observation
 
     public WeatherData() {
     }

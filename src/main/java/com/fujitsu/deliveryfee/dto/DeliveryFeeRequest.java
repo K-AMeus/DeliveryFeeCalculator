@@ -2,6 +2,17 @@ package com.fujitsu.deliveryfee.dto;
 
 import java.time.LocalDateTime;
 
+
+/**
+ * A data transfer object (DTO) representing a request to calculate delivery fees.
+ * This DTO encapsulates all necessary parameters required for requesting a delivery fee
+ * calculation, including the city where the delivery is taking place, the type of vehicle used,
+ * and optionally, the specific date and time for which the calculation is requested.
+ *
+ * This class enables the encapsulation of request parameters into a single object,
+ * simplifying the method signatures in the controller and service layers and allowing for
+ * easier data manipulation and validation.
+ */
 public class DeliveryFeeRequest {
     private String city;
     private String vehicleType;

@@ -15,6 +15,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
+/**
+ * Service for calculating delivery fees based on various factors including
+ * city, vehicle type, and current weather conditions. Utilizes weather data
+ * to apply additional fees as per the business rules.
+ */
 @Service
 public class DeliveryFeeService {
 
@@ -26,6 +32,22 @@ public class DeliveryFeeService {
         this.weatherDataRepository = weatherDataRepository;
     }
 
+
+
+    /**
+     * Calculates the delivery fee for a given city and vehicle type, taking into
+     * account the current weather conditions. Applies base fees and additional
+     * weather-related fees as necessary.
+     *
+     * @param city the city where the delivery is taking place
+     * @param vehicleType the type of vehicle used for the delivery
+     * @param dateTime the datetime for which the fee is being calculated
+     * @return the total calculated delivery fee
+     * @throws UnsupportedCityException if the city is not supported
+     * @throws UnsupportedVehicleTypeException if the vehicle type is not supported
+     * @throws VehicleUseForbiddenException if the vehicle use is forbidden under current weather conditions
+     * @throws WeatherDataUnavailableException if weather data is unavailable for the given time
+     */
     public double calculateDeliveryFee(String city, String vehicleType, LocalDateTime dateTime) {
         log.info("Calculating delivery fee for city: {}, vehicle type: {}, dateTime: {}", city, vehicleType, dateTime);
         city = city.toLowerCase();

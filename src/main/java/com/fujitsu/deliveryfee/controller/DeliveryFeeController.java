@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+
+/**
+ * Rest controller for calculating delivery fees.
+ * Provides endpoints to calculate delivery fees based on city, vehicle type, and optionally, time.
+ */
 @RestController
 @RequestMapping("/delivery-fee")
 @Tag(name = "Delivery fee calculator")
@@ -24,6 +29,15 @@ public class DeliveryFeeController {
     }
 
 
+
+    /**
+     * Calculates the delivery fee based on city, vehicle type, and an optional date-time parameter.
+     *
+     * @param city The city where the delivery is taking place.
+     * @param vehicleType The vehicle type used for the delivery.
+     * @param dateTime The date and time for which the delivery fee calculation is requested.
+     * @return The calculated delivery fee wrapped in a ResponseEntity.
+     */
     @Operation(
             description = "Calculate the delivery fee based on the city and vehicle type."
     )
@@ -36,6 +50,12 @@ public class DeliveryFeeController {
 
 
 
+    /**
+     * Calculates the delivery fee based on a request body containing city, vehicle type, and optional date-time.
+     *
+     * @param request A DeliveryFeeRequest object containing the necessary parameters for fee calculation.
+     * @return The calculated delivery fee wrapped in a ResponseEntity.
+     */
     @Operation(
             description = "Calculate the delivery fee based on the request parameters."
     )
