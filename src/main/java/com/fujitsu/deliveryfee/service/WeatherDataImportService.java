@@ -46,7 +46,7 @@ public class WeatherDataImportService {
      * Fetches weather data XML from an external API, processes it, and saves it to the database.
      * Runs every hour at 15 minutes past the hour.
      */
-    @Scheduled(cron = "0 * * * * *") // This runs at 15 minutes past every hour CHANGE BACK TO @Scheduled(cron = "0 15 * * * *") WHEN FINISHED TESTING
+    @Scheduled(cron = "0 15 * * * *") // This runs at 15 minutes past every hour
     public void fetchAndSaveWeatherData() {
         log.info("Starting to fetch weather data...");
         String xmlData = fetchWeatherDataXml();

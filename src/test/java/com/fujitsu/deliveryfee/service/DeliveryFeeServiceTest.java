@@ -226,4 +226,6 @@ class DeliveryFeeServiceTest {
         assertThrows(VehicleUseForbiddenException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "bike", TEST_DATE_TIME));
     }
 
+    // Can add a lot more both unit and integration tests...
+    // for example test different weather conditions together, database, boundary values, XML parsing etc.
 }

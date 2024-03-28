@@ -2,6 +2,11 @@ package com.fujitsu.deliveryfee.controller;
 
 import com.fujitsu.deliveryfee.model.ExtraFeeRule;
 import com.fujitsu.deliveryfee.service.ExtraFeeRuleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +21,7 @@ import java.util.List;
  * CRUD operations for extra fee rules, enabling the dynamic adjustment of fee calculations
  * according to changing conditions.
  */
+@Tag(name = "Extra Fee Rules", description = "Manage extra fee rules for adjusting delivery fees based on specific conditions.")
 @RestController
 @RequestMapping("/api/extra-fee-rules")
 public class ExtraFeeRuleController {
@@ -28,35 +34,38 @@ public class ExtraFeeRuleController {
     }
 
 
-    /**
-     * Creates a new extra fee rule in the system.
-     *
-     * @param extraFeeRule The extra fee rule to be created.
-     * @return The created extra fee rule wrapped in a ResponseEntity.
-     */
+    @Operation(summary = "Create Extra Fee Rule",
+            description = "Creates a new extra fee rule for adjusting delivery fees based on conditions such as weather.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Extra fee rule created successfully",
+                            content = @Content(schema = @Schema(implementation = ExtraFeeRule.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid request data")
+            })
     @PostMapping
     public ResponseEntity<ExtraFeeRule> createExtraFeeRule(@RequestBody ExtraFeeRule extraFeeRule) {
         return ResponseEntity.ok(extraFeeRuleService.createExtraFeeRule(extraFeeRule));
     }
 
 
-    /**
-     * Retrieves all extra fee rules currently defined in the system.
-     *
-     * @return A list of all extra fee rules wrapped in a ResponseEntity.
-     */
+    @Operation(summary = "Get All Extra Fee Rules",
+            description = "Retrieves all extra fee rules defined in the system.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved all extra fee rules",
+                            content = @Content(schema = @Schema(implementation = ExtraFeeRule.class)))
+            })
     @GetMapping
     public ResponseEntity<List<ExtraFeeRule>> getAllExtraFeeRules() {
         return ResponseEntity.ok(extraFeeRuleService.getAllExtraFeeRules());
     }
 
 
-    /**
-     * Retrieves a specific extra fee rule by its unique ID.
-     *
-     * @param id The ID of the extra fee rule to retrieve.
-     * @return The requested extra fee rule if found, otherwise returns a 404 Not Found response.
-     */
+    @Operation(summary = "Get Extra Fee Rule by ID",
+            description = "Retrieves an extra fee rule by its unique identifier.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Found the extra fee rule",
+                            content = @Content(schema = @Schema(implementation = ExtraFeeRule.class))),
+                    @ApiResponse(responseCode = "404", description = "Extra fee rule not found")
+            })
     @GetMapping("/{id}")
     public ResponseEntity<ExtraFeeRule> getExtraFeeRuleById(@PathVariable Long id) {
         return extraFeeRuleService.getExtraFeeRuleById(id)
@@ -65,25 +74,26 @@ public class ExtraFeeRuleController {
     }
 
 
-    /**
-     * Updates an existing extra fee rule identified by its ID with new details.
-     *
-     * @param id The ID of the extra fee rule to update.
-     * @param extraFeeRuleDetails The new details for the extra fee rule.
-     * @return The updated extra fee rule wrapped in a ResponseEntity.
-     */
+    @Operation(summary = "Update Extra Fee Rule",
+            description = "Updates an existing extra fee rule identified by its ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Extra fee rule updated successfully",
+                            content = @Content(schema = @Schema(implementation = ExtraFeeRule.class))),
+                    @ApiResponse(responseCode = "404", description = "Extra fee rule not found"),
+                    @ApiResponse(responseCode = "400", description = "Invalid request data")
+            })
     @PutMapping("/{id}")
     public ResponseEntity<ExtraFeeRule> updateExtraFeeRule(@PathVariable Long id, @RequestBody ExtraFeeRule extraFeeRuleDetails) {
         return ResponseEntity.ok(extraFeeRuleService.updateExtraFeeRule(id, extraFeeRuleDetails));
     }
 
 
-    /**
-     * Deletes an extra fee rule from the system based on its ID.
-     *
-     * @param id The ID of the extra fee rule to delete.
-     * @return An empty ResponseEntity indicating successful deletion.
-     */
+    @Operation(summary = "Delete Extra Fee Rule",
+            description = "Deletes an extra fee rule from the system based on its ID.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Extra fee rule deleted successfully"),
+                    @ApiResponse(responseCode = "404", description = "Extra fee rule not found")
+            })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExtraFeeRule(@PathVariable Long id) {
         extraFeeRuleService.deleteExtraFeeRule(id);
