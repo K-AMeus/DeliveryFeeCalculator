@@ -9,7 +9,11 @@ import com.fujitsu.deliveryfee.repository.WeatherDataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class DeliveryFeeService {
@@ -22,19 +26,21 @@ public class DeliveryFeeService {
         this.weatherDataRepository = weatherDataRepository;
     }
 
-    public double calculateDeliveryFee(String city, String vehicleType) {
-        log.info("Calculating delivery fee for city: {}, vehicle type: {}", city, vehicleType);
+    public double calculateDeliveryFee(String city, String vehicleType, LocalDateTime dateTime) {
+        log.info("Calculating delivery fee for city: {}, vehicle type: {}, dateTime: {}", city, vehicleType, dateTime);
         city = city.toLowerCase();
         vehicleType = vehicleType.toLowerCase();
 
         String stationName = mapCityToStationName(city);
         double baseFee = calculateBaseFee(city, vehicleType);
-        double weatherFees = calculateWeatherFees(stationName, vehicleType);
+        double weatherFees = calculateWeatherFees(stationName, vehicleType, dateTime);
         double totalFee = baseFee + weatherFees;
-        log.info("Total delivery fee calculated: {} for city: {}, vehicle type: {}", totalFee, city, vehicleType);
+        log.info("Total delivery fee calculated: {} for city: {}, vehicle type: {}, dateTime: {}", totalFee, city, vehicleType, dateTime);
 
         return totalFee;
     }
+
+
 
     private double calculateBaseFee(String city, String vehicleType) {
         switch (city) {
@@ -63,13 +69,19 @@ public class DeliveryFeeService {
         }
     }
 
-    private double calculateWeatherFees(String stationName, String vehicleType) {
-        WeatherData latestWeather = weatherDataRepository.findLatestByCity(stationName);
-        if (latestWeather == null) {
-            throw new WeatherDataUnavailableException(stationName);
-        }
-        double fee = 0.0;
+    private double calculateWeatherFees(String stationName, String vehicleType, LocalDateTime dateTime) {
+        List<WeatherData> weatherDataList = weatherDataRepository.findByCityAndTimestampBefore(
+                stationName,
+                dateTime != null ? dateTime : LocalDateTime.now(),
+                PageRequest.of(0, 1) // Fetch only the top result
+        );
 
+        if (weatherDataList.isEmpty()) {
+            throw new WeatherDataUnavailableException("No weather data available for " + stationName + " at the requested time.");
+        }
+
+        WeatherData latestWeather = weatherDataList.get(0);
+        double fee = 0.0;
 
 
         // Check weather conditions that affect both scooters and bikes

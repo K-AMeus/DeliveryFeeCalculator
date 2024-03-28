@@ -15,7 +15,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,9 +48,12 @@ class DeliveryFeeServiceTest {
     @InjectMocks
     private DeliveryFeeService deliveryFeeService;
 
+    private static final LocalDateTime TEST_DATE_TIME = LocalDateTime.of(2024, 3, 28, 12, 0); // Example date and time
+
     private WeatherData defaultWeatherData() {
-        return new WeatherData(10.0, 5.0, "clear", LocalDateTime.now());
+        return new WeatherData(10.0, 5.0, "clear", TEST_DATE_TIME);
     }
+
 
 
     /**
@@ -70,8 +77,8 @@ class DeliveryFeeServiceTest {
             "Pärnu, bike, 2.0"
     })
     void testBaseFeeCalculation(String city, String vehicleType, double expectedFee) {
-        when(weatherDataRepository.findLatestByCity(anyString())).thenReturn(defaultWeatherData());
-        double fee = deliveryFeeService.calculateDeliveryFee(city, vehicleType);
+        when(weatherDataRepository.findByCityAndTimestampBefore(anyString(), any(LocalDateTime.class), any(Pageable.class))).thenReturn(Collections.singletonList(defaultWeatherData()));
+        double fee = deliveryFeeService.calculateDeliveryFee(city, vehicleType, TEST_DATE_TIME);
         assertEquals(expectedFee, fee, "Incorrect base fee for " + vehicleType + " in " + city);
     }
 
@@ -96,9 +103,9 @@ class DeliveryFeeServiceTest {
     @ParameterizedTest
     @MethodSource("weatherConditionProvider")
     void testWeatherConditionImpact(String city, String vehicleType, Double temperature, Double windSpeed, String phenomenon, double expectedFee) {
-        WeatherData weatherData = new WeatherData(temperature, windSpeed, phenomenon, LocalDateTime.now());
-        when(weatherDataRepository.findLatestByCity(anyString())).thenReturn(weatherData);
-        double fee = deliveryFeeService.calculateDeliveryFee(city, vehicleType);
+        WeatherData weatherData = new WeatherData(temperature, windSpeed, phenomenon, TEST_DATE_TIME);
+        when(weatherDataRepository.findByCityAndTimestampBefore(anyString(), any(LocalDateTime.class), any(Pageable.class))).thenReturn(Collections.singletonList(weatherData));
+        double fee = deliveryFeeService.calculateDeliveryFee(city, vehicleType, TEST_DATE_TIME);
         assertEquals(expectedFee, fee, "Incorrect fee for " + vehicleType + " in " + city + " under specified weather conditions.");
     }
 
@@ -153,13 +160,17 @@ class DeliveryFeeServiceTest {
      * @param windSpeed The wind speed at the time of delivery.
      * @param phenomenon The weather phenomenon at the time of delivery.
      */
+    @ParameterizedTest
+    @MethodSource("forbiddenWeatherConditions")
     void testForbiddenWeatherConditions(String city, String vehicleType, Double temperature, Double windSpeed, String phenomenon) {
-        WeatherData hazardousWeather = new WeatherData(temperature, windSpeed, phenomenon, LocalDateTime.now());
-        when(weatherDataRepository.findLatestByCity(city)).thenReturn(hazardousWeather);
+        WeatherData hazardousWeather = new WeatherData(temperature, windSpeed, phenomenon, TEST_DATE_TIME);
+        when(weatherDataRepository.findByCityAndTimestampBefore(eq("Tallinn-Harku"), eq(TEST_DATE_TIME), any(Pageable.class)))
+                .thenReturn(Collections.singletonList(hazardousWeather));
         assertThrows(VehicleUseForbiddenException.class,
-                () -> deliveryFeeService.calculateDeliveryFee(city, vehicleType),
+                () -> deliveryFeeService.calculateDeliveryFee(city, vehicleType, TEST_DATE_TIME),
                 String.format("Usage of %s should be forbidden under weather conditions: %s", vehicleType, phenomenon));
     }
+
 
     private static Stream<Arguments> forbiddenWeatherConditions() {
         return Stream.of(
@@ -181,7 +192,7 @@ class DeliveryFeeServiceTest {
      */
     @Test
     void whenUnsupportedVehicleType_thenThrowException() {
-        assertThrows(UnsupportedVehicleTypeException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "tank"));
+        assertThrows(UnsupportedVehicleTypeException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "tank", TEST_DATE_TIME));
     }
 
 
@@ -190,7 +201,7 @@ class DeliveryFeeServiceTest {
      */
     @Test
     void whenUnsupportedCity_thenThrowException() {
-        assertThrows(UnsupportedCityException.class, () -> deliveryFeeService.calculateDeliveryFee("UnknownCity", "bike"));
+        assertThrows(UnsupportedCityException.class, () -> deliveryFeeService.calculateDeliveryFee("UnknownCity", "bike", TEST_DATE_TIME));
     }
 
 
@@ -199,19 +210,20 @@ class DeliveryFeeServiceTest {
      */
     @Test
     void whenWeatherDataUnavailable_thenThrowException() {
-        when(weatherDataRepository.findLatestByCity(anyString())).thenReturn(null);
-        assertThrows(WeatherDataUnavailableException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "bike"));
+        when(weatherDataRepository.findByCityAndTimestampBefore(anyString(), any(LocalDateTime.class), any(Pageable.class))).thenReturn(Collections.emptyList());
+        assertThrows(WeatherDataUnavailableException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "bike", TEST_DATE_TIME));
     }
 
 
     /**
      * Ensures that using a bike under extremely high wind conditions correctly throws a {@link VehicleUseForbiddenException}.
      */
+
     @Test
     void whenInTallinnWithBikeAndWindSpeedIsGreaterThan20_thenVehicleUseIsForbidden() {
-        WeatherData extremelyWindyWeather = new WeatherData("Tallinn-Harku", 5.0, 21.0, "clear", LocalDateTime.now());
-        when(weatherDataRepository.findLatestByCity("Tallinn-Harku")).thenReturn(extremelyWindyWeather);
-        assertThrows(VehicleUseForbiddenException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "bike"));
+        WeatherData extremelyWindyWeather = new WeatherData("Tallinn-Harku", 5.0, 21.0, "clear", TEST_DATE_TIME);
+        when(weatherDataRepository.findByCityAndTimestampBefore("Tallinn-Harku", TEST_DATE_TIME, PageRequest.of(0, 1))).thenReturn(Collections.singletonList(extremelyWindyWeather));
+        assertThrows(VehicleUseForbiddenException.class, () -> deliveryFeeService.calculateDeliveryFee("Tallinn", "bike", TEST_DATE_TIME));
     }
 
 }
